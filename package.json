@@ -61,9 +61,9 @@
       },
       "scripts": {
             "dev": "vite",
-            "build": "npm run build:vite && xcopy /Y .\\build\\index.html .\\build\\404.html",
+            "build": "npm run build:vite && echo F | xcopy /Y .\\build\\index.html .\\build\\404.html",
             "build:vite": "vite build",
             "predeploy": "npm run build",
-            "deploy": "npx gh-pages -d build --add --dotfiles"
+            "deploy": "if exist node_modules\\.cache\\gh-pages rmdir /s /q node_modules\\.cache\\gh-pages & npx gh-pages -d build --nojekyll"
       }
 }
