@@ -64,6 +64,6 @@
             "build": "npm run build:vite && xcopy /Y .\\build\\index.html .\\build\\404.html",
             "build:vite": "vite build",
             "predeploy": "npm run build",
-            "deploy": "gh-pages -d build"
+            "deploy": "npx gh-pages -d build --add --dotfiles"
       }
 }
