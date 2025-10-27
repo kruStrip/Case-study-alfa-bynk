@@ -56,8 +56,8 @@
     build: {
       target: 'esnext',
       outDir: 'build',
+      sourcemap: false,
     },
-    sourcemap: false,
   server: {
     port: 3000,
     host: '0.0.0.0',
