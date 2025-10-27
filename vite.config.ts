@@ -5,6 +5,7 @@
 
   export default defineConfig({
     plugins: [react()],
+    base: '/case-study-alfa-bynk/',
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
       alias: {
@@ -56,6 +57,7 @@
       target: 'esnext',
       outDir: 'build',
     },
+    sourcemap: false,
   server: {
     port: 3000,
     host: '0.0.0.0',
