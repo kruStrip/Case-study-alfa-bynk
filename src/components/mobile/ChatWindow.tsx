@@ -58,10 +58,24 @@ export function ChatWindow({
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputAreaRef = useRef<HTMLDivElement>(null);
+  const [inputAreaHeight, setInputAreaHeight] = useState(0);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, isLoading]);
+
+  useEffect(() => {
+    const inputEl = inputAreaRef.current;
+    if (!inputEl) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      setInputAreaHeight(inputEl.offsetHeight);
+    });
+
+    resizeObserver.observe(inputEl);
+    return () => resizeObserver.disconnect();
+  }, []);
 
   useEffect(() => {
     /**
@@ -128,7 +142,7 @@ export function ChatWindow({
   };
 
   const suggestions = [
-    'Расскажи о моих тратах',
+    'Что же мне делать?',
     'Как сэкономить?',
     'Дай совет по накоплениям',
   ];
@@ -152,7 +166,10 @@ export function ChatWindow({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 p-4 space-y-4 overflow-y-auto pb-40">
+      <div
+        className="flex-1 p-4 space-y-4 overflow-y-auto"
+        style={{ paddingBottom: `${inputAreaHeight}px` }}
+      >
         {messages.map((message) => {
           return (
             <div
@@ -176,11 +193,34 @@ export function ChatWindow({
             </div>
           );
         })}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="max-w-[70%] p-3 rounded-lg bg-white text-black rounded-bl-none shadow-sm">
+              <div className="flex items-center space-x-1.5">
+                <span
+                  style={{ animationDelay: '0s' }}
+                  className="h-2 w-2 bg-black rounded-full animate-typing-bubble"
+                ></span>
+                <span
+                  style={{ animationDelay: '0.2s' }}
+                  className="h-2 w-2 bg-black rounded-full animate-typing-bubble"
+                ></span>
+                <span
+                  style={{ animationDelay: '0.4s' }}
+                  className="h-2 w-2 bg-black rounded-full animate-typing-bubble"
+                ></span>
+              </div>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Message Input & Suggestions */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-sm mx-auto bg-white z-20">
+      <div
+        ref={inputAreaRef}
+        className="fixed bottom-0 left-0 right-0 max-w-sm mx-auto bg-white z-20"
+      >
         <div className="px-4 pt-2">
           <div className="flex flex-wrap gap-2">
             {suggestions.map((suggestion, index) => (
