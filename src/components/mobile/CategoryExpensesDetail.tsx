@@ -10,16 +10,7 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-
-interface ExpenseItem {
-  id: string;
-  description: string;
-  amount: number;
-  date: string;
-  category: string;
-  subcategory: string;
-  type?: 'adequate' | 'impulsive'; // Делаем тип необязательным
-}
+import { ExpenseItem } from '../../types'; // Импортируем тип ExpenseItem
 
 interface CategoryExpensesDetailProps {
   categoryId: string;
@@ -27,6 +18,8 @@ interface CategoryExpensesDetailProps {
   onBack: () => void;
   categoryColorsMap: Record<string, string>; // Новый пропс для карты цветов
   initialExpenseType?: 'all' | 'adequate' | 'impulsive' | 'unspecified'; // Новый опциональный пропс
+  expenses: ExpenseItem[]; // Получаем список транзакций через пропсы
+  setExpenses: React.Dispatch<React.SetStateAction<ExpenseItem[]>>; // Функция для обновления транзакций
 }
 
 /**
@@ -35,21 +28,21 @@ interface CategoryExpensesDetailProps {
  * @param categoryName Название выбранной категории или подкатегории.
  * @param onBack Функция для возврата на предыдущий экран.
  */
-export function CategoryExpensesDetail({ categoryId, categoryName, onBack, categoryColorsMap, initialExpenseType }: CategoryExpensesDetailProps) {
+export function CategoryExpensesDetail({ categoryId, categoryName, onBack, categoryColorsMap, initialExpenseType, expenses, setExpenses }: CategoryExpensesDetailProps) {
   const [selectedFilterCategory, setSelectedFilterCategory] = React.useState(categoryId);
   const [selectedExpenseType, setSelectedExpenseType] = React.useState< 'all' | 'adequate' | 'impulsive' | 'unspecified' >(initialExpenseType || 'all'); // Инициализируем из пропсов
   const [selectedExpenseForInfo, setSelectedExpenseForInfo] = React.useState<{ id: string; description: string; type: 'adequate' | 'impulsive' | null } | null>(null); // Состояние для информации о расходе
   const [selectedExpenseForCategoryChange, setSelectedExpenseForCategoryChange] = React.useState<{ id: string; category: string } | null>(null); // Новое состояние для изменения категории
 
   // Здесь будет логика для загрузки и отображения реальных трат по categoryId
-  const [expenses, setExpenses] = React.useState<ExpenseItem[]>(
-    [
-      { id: 'exp1', description: 'Покупка кофе', amount: 200, date: '2025-10-26', category: 'Еда и кафе', subcategory: '' , type: 'impulsive' },
-      { id: 'exp2', description: 'Обед в ресторане', amount: 1200, date: '2025-10-25', category: 'Еда и кафе', subcategory: 'Рестораны', type: 'adequate' },
-      { id: 'exp3', description: 'Поездка на такси', amount: 500, date: '2025-10-24', category: 'Транспорт', subcategory: 'Такси', type: 'adequate' },
-      { id: 'exp4', description: 'Неизвестная трата', amount: 100, date: '2025-10-21', category: 'Развлечения', subcategory: '' }, // Трата без указанного типа
-    ]
-  );
+  // const [expenses, setExpenses] = React.useState<ExpenseItem[]>(
+  //   [
+  //     { id: 'exp1', description: 'Покупка кофе', amount: 200, date: '2025-10-26', category: 'Еда и кафе', subcategory: '' , type: 'impulsive' },
+  //     { id: 'exp2', description: 'Обед в ресторане', amount: 1200, date: '2025-10-25', category: 'Еда и кафе', subcategory: 'Рестораны', type: 'adequate' },
+  //     { id: 'exp3', description: 'Поездка на такси', amount: 500, date: '2025-10-24', category: 'Транспорт', subcategory: 'Такси', type: 'adequate' },
+  //     { id: 'exp4', description: 'Неизвестная трата', amount: 100, date: '2025-10-21', category: 'Развлечения', subcategory: '' }, // Трата без указанного типа
+  //   ]
+  // );
 
   const filterOptions = [
     { id: 'all-expenses', name: 'Все расходы' }, // Обновленный ID

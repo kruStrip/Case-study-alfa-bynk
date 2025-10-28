@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../ui/button';
+import KotekImage from '@assets/kotek.png';
 
 interface ChatMessage {
   id: string;
@@ -39,6 +40,13 @@ export function ChatWindow({ chat, onBack, className }: ChatWindowProps) {
         <h1 className="text-xl font-semibold text-gray-900 ml-2">{chat.name}</h1>
       </div>
 
+      {/* Kotek Image */}
+      <div className="flex justify-center mt-4">
+        <div className="relative w-30 h-30 rounded-full overflow-hidden bg-black flex items-center justify-center">
+          <img src={KotekImage} alt="Kotek" className="w-full h-full object-cover" />
+        </div>
+      </div>
+
       {/* Messages */}
       <div className="flex-1 p-4 space-y-4 overflow-y-auto bg-gray-900">
         {messages.map((message) => (
@@ -49,7 +57,7 @@ export function ChatWindow({ chat, onBack, className }: ChatWindowProps) {
             <div
               className={`max-w-[70%] p-3 rounded-lg ${message.isMe
                 ? 'bg-primary text-white rounded-br-none'
-                : 'bg-gray-800 text-white rounded-bl-none shadow-sm border border-gray-700'
+                : 'bg-gray-800 text-black rounded-bl-none shadow-sm border border-gray-700'
               }`}
             >
               <p className="text-sm">{message.text}</p>

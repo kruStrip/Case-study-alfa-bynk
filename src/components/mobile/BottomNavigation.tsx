@@ -1,9 +1,10 @@
-import { Home, CreditCard, ShoppingBag, Target, MessageCircle } from 'lucide-react';
+import { Home, CreditCard, ShoppingBag, Target, MessageCircle, Zap } from 'lucide-react';
 import React from "react";
 
 const navItems = [
   { id: 'goals', icon: Target, label: 'Цели' },
   { id: 'expenses', icon: CreditCard, label: 'Расходы' }, // Новая вкладка для расходов
+  { id: 'challenges', icon: Zap, label: 'Челленджи' },
   { id: 'chats', icon: MessageCircle, label: 'Чаты' }
 ];
 

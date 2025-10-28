@@ -35,7 +35,7 @@ export function ChatsPage({ onChatWindowOpenChange, className, initialChatId }: 
   const chatItems: ChatItem[] = [
     {
       id: '3',
-      name: 'Дзынь',
+      name: 'Дзынь Ⅰ',
       lastMessage: 'Вы откладываете 15% дохода!',
       time: 'Пн',
       unread: true,

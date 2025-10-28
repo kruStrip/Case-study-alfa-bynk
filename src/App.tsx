@@ -11,10 +11,13 @@ import { SavingsHistoryPage } from './components/mobile/SavingsHistoryPage'; // 
 import { RoundingHistoryPage } from './components/mobile/RoundingHistoryPage'; // Импорт нового компонента
 import { SelfSavingsHistoryPage } from './components/mobile/SelfSavingsHistoryPage'; // Импорт нового компонента
 import { AddGoalPage } from './components/mobile/AddGoalPage'; // Импорт страницы добавления цели
+import ChallengesPage from './components/mobile/ChallengesPage'; // Импорт страницы челленджей
+import AddChallengePage from './components/mobile/AddChallengePage'; // Импорт страницы добавления челленджа
+import { Challenge, ExpenseItem } from './types'; // Импорт типов Challenge и ExpenseItem
 
 export default function App() {
   // Устанавливает текущий экран приложения. Изначально это может быть 'main' (главная страница), 'transfer' (перевод средств) или 'goals' (цели сбережений).
-  const [currentScreen, setCurrentScreen] = useState<'transfer' | 'goals' | 'chats' | 'expenses' | 'cashbackHistory' | 'savingsHistory' | 'roundingHistory' | 'selfSavingsHistory' | 'addGoal'>('goals');
+  const [currentScreen, setCurrentScreen] = useState<'transfer' | 'goals' | 'chats' | 'expenses' | 'cashbackHistory' | 'savingsHistory' | 'roundingHistory' | 'selfSavingsHistory' | 'addGoal' | 'challenges' | 'addChallenge'>('goals');
   // Отслеживает активную вкладку в нижней навигации. Изначально установлена на 'goals' (цели).
   const [activeTab, setActiveTab] = useState('goals');
   // Отслеживает, открыто ли окно чата. Изначально false.
@@ -50,6 +53,19 @@ export default function App() {
     },
   ]);
 
+  // State для хранения челленджей
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+
+  // State для хранения транзакций
+  const [expenses, setExpenses] = useState<ExpenseItem[]>(
+    [
+      { id: 'exp1', description: 'Покупка кофе', amount: 200, date: '2025-10-26', category: 'Еда и кафе', subcategory: '' , type: 'impulsive' },
+      { id: 'exp2', description: 'Обед в ресторане', amount: 1200, date: '2025-10-25', category: 'Еда и кафе', subcategory: 'Рестораны', type: 'adequate' },
+      { id: 'exp3', description: 'Поездка на такси', amount: 500, date: '2025-10-24', category: 'Транспорт', subcategory: 'Такси', type: 'adequate' },
+      { id: 'exp4', description: 'Неизвестная трата', amount: 100, date: '2025-10-21', category: 'Развлечения', subcategory: '' }, // Трата без указанного типа
+    ]
+  );
+
   const categoryColorsMap: Record<string, string> = {
     'Еда и кафе': '#EF4444',
     'Транспорт': '#EC4899',
@@ -71,6 +87,8 @@ export default function App() {
     } else if (tab === 'expenses') {
       setCurrentScreen('expenses');
       setSelectedCategoryForDetail({ id: 'all-expenses', name: 'Все расходы', expenseType: 'all' }); // Устанавливаем значение по умолчанию для "Всех расходов"
+    } else if (tab === 'challenges') { // Добавляем обработку для вкладки 'challenges'
+      setCurrentScreen('challenges');
     }
   };
 
@@ -123,6 +141,26 @@ export default function App() {
     setGoals([...goals, newGoal]);
   };
 
+  // Обрабатывает добавление нового челленджа
+  const handleAddChallenge = (name: string, durationDays: number, relatedTransactions: ExpenseItem[]) => {
+    const startDate = new Date().toISOString().split('T')[0];
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + durationDays);
+
+    const newChallenge: Challenge = {
+      id: Date.now().toString(),
+      name,
+      durationDays,
+      startDate,
+      endDate: endDate.toISOString().split('T')[0],
+      relatedTransactions,
+      status: 'active',
+      progress: 0,
+    };
+    setChallenges([...challenges, newChallenge]);
+    setCurrentScreen('challenges'); // После создания возвращаемся на страницу со списком челленджей
+  };
+
   // Если текущий экран — 'addGoal', отображает компонент AddGoalPage.
   if (currentScreen === 'addGoal') {
     return (
@@ -131,6 +169,32 @@ export default function App() {
           onBack={() => setCurrentScreen('goals')}
           onAddGoal={handleAddGoal}
         />
+      </div>
+    );
+  }
+
+  // Если текущий экран — 'challenges', отображает компонент ChallengesPage.
+  if (currentScreen === 'challenges') {
+    return (
+      <div className="bg-white min-h-screen max-w-sm mx-auto relative transition-opacity duration-300">
+        <ChallengesPage onAddChallengeClick={() => setCurrentScreen('addChallenge')} challenges={challenges} />
+        <BottomNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+      </div>
+    );
+  }
+
+  // Если текущий экран — 'addChallenge', отображает компонент AddChallengePage.
+  if (currentScreen === 'addChallenge') {
+    return (
+      <div className="bg-white min-h-screen max-w-sm mx-auto relative transition-opacity duration-300">
+        <AddChallengePage
+          onBack={() => setCurrentScreen('challenges')}
+          onAddChallenge={handleAddChallenge}
+          availableExpenses={expenses} // Передаем доступные транзакции
+          activeTab={activeTab} // Передаем activeTab
+          onTabChange={handleTabChange} // Передаем onTabChange
+        />
+        <BottomNavigation activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
     );
   }
@@ -157,6 +221,8 @@ export default function App() {
           onBack={() => setSelectedCategoryForDetail(null)}
           categoryColorsMap={categoryColorsMap}
           initialExpenseType={selectedCategoryForDetail.expenseType || 'all'}
+          expenses={expenses} // Передаем список транзакций
+          setExpenses={setExpenses} // Передаем функцию для обновления транзакций
         />
         <BottomNavigation activeTab={activeTab} onTabChange={handleTabChange} className="absolute bottom-0 left-0 right-0" />
       </div>
