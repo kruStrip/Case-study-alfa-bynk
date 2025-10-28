@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -11,6 +12,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { ExpenseItem } from '../../types'; // Импортируем тип ExpenseItem
+import { useIsMobile } from "@/components/ui/use-mobile";
+import { AddCategoryForm } from "./AddCategoryForm";
+
+interface Category {
+  id: string;
+  name: string;
+  isSubcategory: boolean;
+  parentId?: string;
+}
 
 interface CategoryExpensesDetailProps {
   categoryId: string;
@@ -33,6 +43,31 @@ export function CategoryExpensesDetail({ categoryId, categoryName, onBack, categ
   const [selectedExpenseType, setSelectedExpenseType] = React.useState< 'all' | 'adequate' | 'impulsive' | 'unspecified' >(initialExpenseType || 'all'); // Инициализируем из пропсов
   const [selectedExpenseForInfo, setSelectedExpenseForInfo] = React.useState<{ id: string; description: string; type: 'adequate' | 'impulsive' | null } | null>(null); // Состояние для информации о расходе
   const [selectedExpenseForCategoryChange, setSelectedExpenseForCategoryChange] = React.useState<{ id: string; category: string } | null>(null); // Новое состояние для изменения категории
+  // Состояние для управления видимостью модального окна добавления категории/подкатегории
+  const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([
+    { id: 'Еда и кафе', name: 'Еда и кафе', isSubcategory: false },
+    { id: 'Рестораны', name: 'Рестораны', isSubcategory: true, parentId: 'Еда и кафе' },
+    { id: 'Продукты', name: 'Продукты', isSubcategory: true, parentId: 'Еда и кафе' },
+    { id: 'Транспорт', name: 'Транспорт', isSubcategory: false },
+    { id: 'Общественный транспорт', name: 'Общественный транспорт', isSubcategory: true, parentId: 'Транспорт' },
+    { id: 'Такси', name: 'Такси', isSubcategory: true, parentId: 'Транспорт' },
+    { id: 'Развлечения', name: 'Развлечения', isSubcategory: false },
+  ]);
+  const isMobile = useIsMobile();
+
+  // Обработчик добавления новой категории/подкатегории
+  const handleAddCategory = (name: string, isSubcategory: boolean, parentCategory?: string) => {
+    const newCategoryId = name; // Временный ID, можно генерировать UUID
+    const newCategory: Category = {
+      id: newCategoryId,
+      name,
+      isSubcategory,
+      ...(parentCategory && { parentId: parentCategory }),
+    };
+    setCategories((prevCategories) => [...prevCategories, newCategory]);
+    console.log(`Добавлена ${isSubcategory ? 'подкатегория' : 'категория'}: ${name}` + (parentCategory ? ` в категорию ${parentCategory}` : ''));
+  };
 
   // Здесь будет логика для загрузки и отображения реальных трат по categoryId
   // const [expenses, setExpenses] = React.useState<ExpenseItem[]>(
@@ -46,12 +81,7 @@ export function CategoryExpensesDetail({ categoryId, categoryName, onBack, categ
 
   const filterOptions = [
     { id: 'all-expenses', name: 'Все расходы' }, // Обновленный ID
-    { id: 'Еда и кафе', name: 'Еда и кафе' },
-    { id: 'Рестораны', name: 'Рестораны' },
-    { id: 'Продукты', name: 'Продукты' },
-    { id: 'Транспорт', name: 'Транспорт' },
-    { id: 'Общественный транспорт', name: 'Общественный транспорт' },
-    { id: 'Такси', name: 'Такси' },
+    ...categories.map(cat => ({ id: cat.id, name: cat.name }))
   ];
 
   const expenseTypeFilterOptions = [
@@ -100,7 +130,12 @@ export function CategoryExpensesDetail({ categoryId, categoryName, onBack, categ
     <div className="h-screen bg-white flex flex-col">
       {/* Content */}
       <div className="px-4 py-4 flex-1 flex flex-col"> {/* Удаляем overflow-hidden */}
-        <h2 className="text-lg font-semibold mb-4">Список трат</h2>
+        {/* Заголовок страницы с кнопкой добавления */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Список трат</h2>
+          {/* Кнопка для добавления категории/подкатегории */}
+          <button onClick={() => setIsAddCategoryModalOpen(true)} className="text-blue-500 text-2xl font-bold">+</button>
+        </div>
         <div className="flex gap-4 pb-4 flex-shrink-0"> {/* Изменяем mb-4 на pb-4 и добавляем flex-shrink-0 */}
           <div >
             <Select onValueChange={setSelectedFilterCategory} value={selectedFilterCategory}>
@@ -191,7 +226,7 @@ export function CategoryExpensesDetail({ categoryId, categoryName, onBack, categ
         {/* Кастомный модальный компонент для выбора типа траты */}
         {!!selectedExpenseForInfo && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setSelectedExpenseForInfo(null)}>
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}> {/* Предотвращаем закрытие при клике внутри модального окна */}
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 shadow-sm" onClick={(e) => e.stopPropagation()}> {/* Предотвращаем закрытие при клике внутри модального окна */}
               <h2 className="text-xl font-semibold mb-4">{selectedExpenseForInfo?.description}</h2>
               <p className="text-gray-700 mb-4">Выберите тип траты:</p>
               <div className="flex gap-2 mb-6">
@@ -222,7 +257,7 @@ export function CategoryExpensesDetail({ categoryId, categoryName, onBack, categ
         {/* Кастомный модальный компонент для выбора категории */}
         {!!selectedExpenseForCategoryChange && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setSelectedExpenseForCategoryChange(null)}>
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}> 
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 shadow-sm" onClick={(e) => e.stopPropagation()}> 
               <h2 className="text-xl font-semibold mb-4">Изменить категорию</h2>
               <p className="text-gray-700 mb-4">Выберите новую категорию для {expenses.find(exp => exp.id === selectedExpenseForCategoryChange?.id)?.description}:</p>
               <Select 
@@ -253,6 +288,14 @@ export function CategoryExpensesDetail({ categoryId, categoryName, onBack, categ
           </div>
         )}
       </div>
+      {/* Заглушка для модального окна добавления категории/подкатегории */}
+      {isAddCategoryModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center">
+          <div className="bg-white p-4 rounded-lg border border-gray-300 shadow-sm">
+            <AddCategoryForm onClose={() => setIsAddCategoryModalOpen(false)} onAddCategory={handleAddCategory} categories={categories} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

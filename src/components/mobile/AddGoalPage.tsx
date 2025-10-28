@@ -104,7 +104,7 @@ export function AddGoalPage({ onBack, onAddGoal }: AddGoalPageProps) {
           </div>
         </div>
 
-        <div className="mt-12">
+        <div className="mt-32">
           <Button
             onClick={handleSubmit}
             disabled={!goalName || !targetAmount || !dueDate}

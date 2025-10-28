@@ -100,7 +100,7 @@ export default function App() {
   const handleStartChat = () => {
     setCurrentScreen('chats');
     setActiveTab('chats');
-    setInitialChatToOpen('3'); // Устанавливаем ID чата 'Дзынь I'
+    setInitialChatToOpen('new_coffee_chat'); // Устанавливаем ID чата 'Дзынь I'
   };
 
   const handleNavigateToExpenses = (categoryId: string, categoryName: string, expenseType: 'all' | 'adequate' | 'impulsive' | 'unspecified') => {
@@ -256,10 +256,15 @@ export default function App() {
   if (currentScreen === 'chats') {
     return (
       <div className="max-w-sm mx-auto relative flex flex-col h-screen transition-opacity duration-300">
-        <div className="flex-1 pb-16 overflow-hidden">
-          <ChatsPage onChatWindowOpenChange={setIsChatWindowOpen} initialChatId={initialChatToOpen} className="h-full" />
+        <div className={`flex-1 ${!isChatWindowOpen ? 'pb-16' : ''} overflow-hidden`}>
+          <ChatsPage
+            onChatWindowOpenChange={setIsChatWindowOpen}
+            initialChatId={initialChatToOpen}
+            className="h-full"
+            onChatOpened={() => setInitialChatToOpen(undefined)}
+          />
         </div>
-        <BottomNavigation activeTab={activeTab} onTabChange={handleTabChange} className="absolute bottom-0 left-0 right-0" />
+        {!isChatWindowOpen && <BottomNavigation activeTab={activeTab} onTabChange={handleTabChange} className="absolute bottom-0 left-0 right-0" />}
       </div>
     );
   }

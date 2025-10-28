@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MessageSquare, PlusCircle, Send } from 'lucide-react';
+import { Search, MessageSquare, PlusCircle } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import catImage from '@assets/kotek.png'; // Импортируем изображение кота
 import { ChatWindow } from './ChatWindow'; // Импортируем компонент ChatWindow
+
+interface ChatMessage {
+  id: string;
+  text: string;
+  isMe: boolean;
+  time: string;
+}
 
 interface ChatItem {
   id: string;
@@ -22,35 +29,91 @@ interface ChatsPageProps {
   onChatWindowOpenChange: (isOpen: boolean) => void;
   className?: string; // Добавляем пропс className
   initialChatId?: string; // Новый пропс для открытия конкретного чата
+  onChatOpened?: () => void;
 }
 
 /**
  * Компонент страницы для раздела 'Чаты'.
  * Здесь будет отображаться список чатов или интерфейс чата.
  */
-export function ChatsPage({ onChatWindowOpenChange, className, initialChatId }: ChatsPageProps) {
+export function ChatsPage({
+  onChatWindowOpenChange,
+  className,
+  initialChatId,
+  onChatOpened,
+}: ChatsPageProps) {
   const [selectedChat, setSelectedChat] = useState<ChatItem | null>(null);
+  const [messages, setMessages] = useState<{ [key: string]: ChatMessage[] }>({
+    '3': [
+      {
+        id: 'm1',
+        text: 'Вы тратите 3 200 ₽ в месяц на кофе. Если готовить его дома, сэкономите до 2 400 - почти 10% от вашей цели!',
+        isMe: false,
+        time: '10:35',
+      },
+    ],
+  });
 
   // Пример данных для чатов
-  const chatItems: ChatItem[] = [
+  const [chatItems, setChatItems] = useState<ChatItem[]>([
     {
       id: '3',
-      name: 'Дзынь Ⅰ',
-      lastMessage: 'Вы откладываете 15% дохода!',
+      name: 'Пора остановиться!',
+      lastMessage: 'Вы тратите 3 200 ₽ в месяц на кофе.',
       time: 'Пн',
       unread: true,
     },
-  ];
+  ]);
 
   useEffect(() => {
     if (initialChatId) {
-      const chatToOpen = chatItems.find(chat => chat.id === initialChatId);
-      if (chatToOpen) {
-        setSelectedChat(chatToOpen);
-        onChatWindowOpenChange(true);
+      if (initialChatId === 'new_coffee_chat') {
+        let chat = chatItems.find((c) => c.name === 'Пора остановиться!');
+        if (!chat) {
+          const newChatId = (chatItems.length + 1).toString();
+          const newChat: ChatItem = {
+            id: newChatId,
+            name: 'Пора остановиться!',
+            lastMessage:
+              'Вы тратите 3 200 ₽ в месяц на кофе. Если готовить его дома, сэкономите до 2 400 - почти 10% от вашей цели!',
+            time: new Date().toLocaleTimeString('ru-RU', {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+            unread: true,
+          };
+          setChatItems((prev) => [...prev, newChat]);
+          setMessages((prev) => ({
+            ...prev,
+            [newChatId]: [
+              {
+                id: `msg-${Date.now()}`,
+                text: 'Вы тратите 3 200 ₽ в месяц на кофе. Если готовить его дома, сэкономите до 2 400 - почти 10% от вашей цели!',
+                isMe: false,
+                time: new Date().toLocaleTimeString('ru-RU', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }),
+              },
+            ],
+          }));
+          setSelectedChat(newChat);
+          onChatWindowOpenChange(true);
+        } else {
+          setSelectedChat(chat);
+          onChatWindowOpenChange(true);
+        }
+        onChatOpened?.();
+      } else {
+        const chatToOpen = chatItems.find((chat) => chat.id === initialChatId);
+        if (chatToOpen) {
+          setSelectedChat(chatToOpen);
+          onChatWindowOpenChange(true);
+          onChatOpened?.();
+        }
       }
     }
-  }, [initialChatId, chatItems, onChatWindowOpenChange]);
+  }, [initialChatId, onChatWindowOpenChange, chatItems, onChatOpened]);
 
   const handleChatClick = (chat: ChatItem) => {
     setSelectedChat(chat);
@@ -62,23 +125,64 @@ export function ChatsPage({ onChatWindowOpenChange, className, initialChatId }: 
     onChatWindowOpenChange(false); // Сообщаем родительскому компоненту, что окно чата закрыто
   };
 
+  const handleCreateNewChat = () => {
+    const newChatId = `chat_${Date.now()}`;
+    const newChat: ChatItem = {
+      id: newChatId,
+      name: `Новый диалог`,
+      lastMessage: 'Привет! 😊 Как я могу помочь тебе сегодня?',
+      time: new Date().toLocaleTimeString('ru-RU', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      unread: false,
+    };
+
+    setChatItems(prev => [newChat, ...prev]);
+    setMessages(prev => ({
+      ...prev,
+      [newChatId]: [
+        {
+          id: `msg_${Date.now()}`,
+          text: 'Привет! 😊 Как я могу помочь тебе сегодня? Есть вопросы или задачи, которые ты хочешь обсудить?',
+          isMe: false,
+          time: newChat.time,
+        },
+      ],
+    }));
+    setSelectedChat(newChat);
+    onChatWindowOpenChange(true);
+  };
+
+  const handleSendMessage = (
+    chatId: string,
+    text: string,
+    isMe: boolean = true
+  ) => {
+    const newMessage: ChatMessage = {
+      id: `msg-${Date.now()}-${Math.random()}`,
+      text,
+      isMe,
+      time: new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    };
+    setMessages(prevMessages => ({
+      ...prevMessages,
+      [chatId]: [...(prevMessages[chatId] || []), newMessage],
+    }));
+  };
+
   if (selectedChat) {
     return (
-      <>
-        <div className="h-full pb-28">
-          <ChatWindow chat={selectedChat} onBack={handleBackFromChat} className="h-full" />
-        </div>
-        {/* Message Input - fixed позиционирование внизу над навигацией */}
-        <div style={{ bottom: '64px' }} className="fixed left-0 right-0 max-w-sm mx-auto bg-white border-t border-gray-200 p-4 flex items-center space-x-3 z-40">
-          <Input
-            placeholder="Написать сообщение..."
-            className="flex-1 px-4 py-2 rounded-full bg-gray-100 border-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
-          />
-          <Button className="bg-primary hover:bg-red-700 rounded-full relative flex items-center justify-center w-8 h-8">
-            <Send className="w-5 h-5 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-          </Button>
-        </div>
-      </>
+      <ChatWindow
+        chat={selectedChat}
+        messages={messages[selectedChat.id] || []}
+        onBack={handleBackFromChat}
+        onSendMessage={handleSendMessage}
+        className="h-full"
+      />
     );
   }
 
@@ -88,7 +192,7 @@ export function ChatsPage({ onChatWindowOpenChange, className, initialChatId }: 
       <div className="sticky top-0 bg-white border-b border-gray-200 z-10 px-4 py-3">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-gray-900">Чаты</h1>
-          <Button variant="ghost" className="relative flex items-center justify-center w-9 h-8">
+          <Button variant="ghost" className="relative flex items-center justify-center w-9 h-8" onClick={handleCreateNewChat}>
             <PlusCircle className="w-6 h-6 text-gray-600" />
           </Button>
         </div>
